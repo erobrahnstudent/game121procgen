@@ -1,22 +1,42 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using System.IO;
 using Assets;
 
-public class TreeRectDebug : MonoBehaviour {
+public class TreeRectDebug : MonoBehaviour
+{
     public int levelWidth;
     public int levelHeight;
     public int cycles;
-	// Use this for initialization
-	void Start () {
-        BinaryTree<RectInt> sampleRectTree = new BinaryTree<RectInt>(new RectInt(0,0,levelWidth,levelHeight));
+    // Use this for initialization
+    void Start()
+    {
+        BinaryTree<RectInt> sampleRectTree = new BinaryTree<RectInt>(new RectInt(0, 0, levelWidth, levelHeight));
 
         IterateOnTree(sampleRectTree, cycles, true);
-        List<BinaryTreeNode<RectInt>> leaves = new List<BinaryTreeNode<RectInt>>(); 
+        List<BinaryTreeNode<RectInt>> leaves = new List<BinaryTreeNode<RectInt>>();
         CollectLeaves(sampleRectTree.Root(), leaves);
+        List<BinaryTreeNode<RectInt>> rooms = new List<BinaryTreeNode<RectInt>>();
+        MakeRooms(leaves, rooms);
         int[,] output = new int[levelWidth, levelHeight];
-        int change = 1;
-        foreach(BinaryTreeNode<RectInt> node in leaves)
+        //int change = 1;
+        //foreach (BinaryTreeNode<RectInt> node in leaves)
+        //{
+        //    for (int x = 0; x < output.GetLength(0); x++)
+        //    {
+        //        for (int y = 0; y < output.GetLength(1); y++)
+        //        {
+        //            if (NodeRectWorld(node).Contains(new Vector2Int(x, y)))
+        //            {
+        //                output[x, y] = 0;
+        //            }
+        //        }
+        //    }
+        //    //change++;
+        //    //print("Partition: " + node.Value() + " at WorldRect: " + NodeRectWorld(node));
+        //}
+        foreach (BinaryTreeNode<RectInt> node in rooms)
         {
             for (int x = 0; x < output.GetLength(0); x++)
             {
@@ -24,14 +44,25 @@ public class TreeRectDebug : MonoBehaviour {
                 {
                     if (NodeRectWorld(node).Contains(new Vector2Int(x, y)))
                     {
-                        output[x, y] = change;
+                        output[x, y] = 1;
                     }
                 }
             }
-            change++;
-            //print("Partition: " + node.Value() + " at WorldRect: " + NodeRectWorld(node));
         }
         TestPrint(output);
+    }
+
+    void MakeRooms(List<BinaryTreeNode<RectInt>> leaves, List<BinaryTreeNode<RectInt>> rooms)
+    {
+        foreach (BinaryTreeNode<RectInt> leaf in leaves)
+        {
+            RectInt basenode = leaf.Value();
+            RectInt rct = new RectInt(1, 1, basenode.width - 2, basenode.height - 2);
+            BinaryTreeNode<RectInt> ract = new BinaryTreeNode<RectInt>(rct);
+            ract.parent = leaf;
+            leaf.room = ract;
+            rooms.Add(ract);
+        }
     }
 
     void TestPrint(int[,] output)
@@ -41,12 +72,22 @@ public class TreeRectDebug : MonoBehaviour {
         {
             for (int x = 0; x < output.GetLength(0); x++)
             {
-                sb.AppendFormat("{0,3}", output[x,y]);
+                if (output[x, y] == 1)
+                {
+                    sb.Append(" F");
+                }
+                else
+                {
+                    sb.Append(" E");
+                }
             }
-            sb.Append("\n");
+            sb.AppendLine("");
         }
+        File.WriteAllText("C:\\Temp\\Debug.txt", sb.ToString());
         Debug.Log(sb.ToString());
     }
+
+
 
     private void IterateOnTree(BinaryTree<RectInt> tree, int times, bool startingsplit)
     {
@@ -101,7 +142,7 @@ public class TreeRectDebug : MonoBehaviour {
         basenode.AddChild(split2);
     }
 
-	private RectInt NodeRectWorld(BinaryTreeNode<RectInt> node)
+    private RectInt NodeRectWorld(BinaryTreeNode<RectInt> node)
     {
         BinaryTreeNode<RectInt> current = node;
         RectInt rectWorld = node.Value();
@@ -115,9 +156,10 @@ public class TreeRectDebug : MonoBehaviour {
             current = current.parent;
         }
         return rectWorld;
-    } 
-	// Update is called once per frame
-	void Update () {
-		
-	}
+    }
+    // Update is called once per frame
+    void Update()
+    {
+
+    }
 }

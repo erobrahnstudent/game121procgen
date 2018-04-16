@@ -29,6 +29,7 @@ namespace Assets
         public BinaryTreeNode<T> parent;
         public BinaryTreeNode<T> leftChild;
         public BinaryTreeNode<T> rightChild;
+        public BinaryTreeNode<T> room;
 
         private T innerValue;
         public T Value()
