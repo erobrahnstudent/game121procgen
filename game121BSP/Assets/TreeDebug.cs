@@ -22,7 +22,7 @@ public class TreeDebug : MonoBehaviour
 
         BinaryTreeNode<int> treeRoot = sampleTree.Root();
         List<BinaryTreeNode<int>> leaves = new List<BinaryTreeNode<int>>();
-        CollectLeaves(treeRoot, leaves);
+        //CollectLeaves(treeRoot, leaves);
         int sum = 0;
         foreach(BinaryTreeNode<int> leaf in leaves)
         {
@@ -57,21 +57,21 @@ public class TreeDebug : MonoBehaviour
         Debug.Log(sb.ToString());
     }
 
-    private void CollectLeaves(BinaryTreeNode<int> currentNode, List<BinaryTreeNode<int>> leaves)
-    {
-        if (currentNode == null) return;
+    //private void CollectLeaves(BinaryTreeNode<int> currentNode, List<BinaryTreeNode<int>> leaves)
+    //{
+    //    if (currentNode == null) return;
 
-        if (currentNode.isLeaf())
-        {
-            leaves.Add(currentNode);
-            return;
-        }
-        else
-        {
-            CollectLeaves(currentNode.leftChild, leaves);
-            CollectLeaves(currentNode.rightChild, leaves);
-        }
-    }
+    //    if (currentNode.isLeaf())
+    //    {
+    //        leaves.Add(currentNode);
+    //        return;
+    //    }
+    //    else
+    //    {
+    //        CollectLeaves(currentNode.leftChild, leaves);
+    //        CollectLeaves(currentNode.rightChild, leaves);
+    //    }
+    //}
 
     private int CountFromNodeToRoot(BinaryTreeNode<int> node)
     {

@@ -14,11 +14,15 @@ public class TreeRectDebug : MonoBehaviour
     {
         BinaryTree<RectInt> sampleRectTree = new BinaryTree<RectInt>(new RectInt(0, 0, levelWidth, levelHeight));
 
-        IterateOnTree(sampleRectTree, cycles, true);
+        IterateOnTree(sampleRectTree, cycles, false);
         List<BinaryTreeNode<RectInt>> leaves = new List<BinaryTreeNode<RectInt>>();
         CollectLeaves(sampleRectTree.Root(), leaves);
         List<BinaryTreeNode<RectInt>> rooms = new List<BinaryTreeNode<RectInt>>();
         MakeRooms(leaves, rooms);
+        List<BinaryTreeNode<RectInt>> nodes = new List<BinaryTreeNode<RectInt>>();
+        collectNodes(rooms, nodes);
+        List<BinaryTreeNode<RectInt>> corridors = new List<BinaryTreeNode<RectInt>>();
+        makeConnections(nodes, corridors);
         int[,] output = new int[levelWidth, levelHeight];
         //int change = 1;
         //foreach (BinaryTreeNode<RectInt> node in leaves)
@@ -49,6 +53,20 @@ public class TreeRectDebug : MonoBehaviour
                 }
             }
         }
+        foreach (BinaryTreeNode<RectInt> cor in corridors)
+        {
+            for (int x = 0; x < output.GetLength(0); x++)
+            {
+                for (int y = 0; y < output.GetLength(1); y++)
+                {
+                    RectInt rct = NodeRectWorld(cor);
+                    if (rct.Contains(new Vector2Int(x, y)))
+                    {
+                        output[x, y] = 2;
+                    }
+                }
+            }
+        }
         TestPrint(output);
     }
 
@@ -60,7 +78,7 @@ public class TreeRectDebug : MonoBehaviour
             RectInt rct = new RectInt(1, 1, basenode.width - 2, basenode.height - 2);
             BinaryTreeNode<RectInt> ract = new BinaryTreeNode<RectInt>(rct);
             ract.parent = leaf;
-            leaf.room = ract;
+            leaf.rightChild = ract;
             rooms.Add(ract);
         }
     }
@@ -76,7 +94,11 @@ public class TreeRectDebug : MonoBehaviour
                 {
                     sb.Append(" F");
                 }
-                else
+                else if (output[x, y] == 2)
+                {
+                    sb.Append(" C");
+                }
+                else if (output[x, y] == 0)
                 {
                     sb.Append(" E");
                 }
@@ -109,16 +131,67 @@ public class TreeRectDebug : MonoBehaviour
     {
         if (currentNode == null) return;
 
-        if (currentNode.isLeaf())
-        {
-            leaves.Add(currentNode);
-            return;
-        }
-        else
+        if (currentNode.leftChild != null)
         {
             CollectLeaves(currentNode.leftChild, leaves);
+        }
+        if (currentNode.rightChild != null)
+        {
             CollectLeaves(currentNode.rightChild, leaves);
         }
+        if (currentNode.rightChild == null && currentNode.leftChild == null)
+        {
+            leaves.Add(currentNode);
+        }
+    }
+    
+    private void collectNodes(List<BinaryTreeNode<RectInt>> rooms, List<BinaryTreeNode<RectInt>> leaves)
+    {
+        foreach (BinaryTreeNode<RectInt> room in rooms)
+        {
+            if (!leaves.Contains(room.parent.parent))
+            {
+                leaves.Add(room.parent.parent);
+            }
+        }
+    }
+
+    private void getNextLevelUp(List<BinaryTreeNode<RectInt>> nodes, List<BinaryTreeNode<RectInt>> branches)
+    {
+        foreach (BinaryTreeNode<RectInt> node in nodes)
+        {
+            if (node.parent != null)
+            {
+                if (!branches.Contains(node.parent))
+                {
+                    branches.Add(node.parent);
+                }
+            }
+        }
+    }
+
+    private void makeConnections(List<BinaryTreeNode<RectInt>> nodes, List<BinaryTreeNode<RectInt>> corridors)
+    {
+        //List<BinaryTreeNode<RectInt>> nx = nodes;
+        for (int x = 0; x < nodes.Count; x++)
+        {
+            RectInt room1 = NodeRectWorld(nodes[x].leftChild.rightChild);
+            RectInt room2 = NodeRectWorld(nodes[x].rightChild.rightChild);
+
+            //if (room1.y == room2.y)
+            //{
+                int corridorStart = nodes[x].Value().height / 2;
+                nodes[x].leftChild = new BinaryTreeNode<RectInt>(new RectInt(nodes[x].leftChild.Value().width - 1, corridorStart, 2, 1));
+                nodes[x].leftChild.parent = nodes[x];
+                corridors.Add(nodes[x].leftChild);
+            //}
+        }
+        //while (nx.Count > 1) // because it'll BE one when we're at root
+        //{
+        //    List<BinaryTreeNode<RectInt>> nx2 = nx;
+        //    nx.Clear();
+        //    getNextLevelUp(nx2, nx);
+        //}
     }
 
     private void rectSplit(BinaryTreeNode<RectInt> basenode, bool VertOrHoriz)

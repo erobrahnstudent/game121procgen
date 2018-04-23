@@ -29,7 +29,7 @@ namespace Assets
         public BinaryTreeNode<T> parent;
         public BinaryTreeNode<T> leftChild;
         public BinaryTreeNode<T> rightChild;
-        public BinaryTreeNode<T> room;
+        //public BinaryTreeNode<T> room;
 
         private T innerValue;
         public T Value()
@@ -37,10 +37,10 @@ namespace Assets
             return innerValue;
         }
 
-        public bool isLeaf()
-        {
-            return leftChild == null && rightChild == null;
-        }
+        //public bool isLeaf()
+        //{
+        //    return leftChild == null && rightChild == null;
+        //}
 
         public BinaryTreeNode(T nodeValue)
         {
