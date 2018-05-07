@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using System.IO;
 using Assets;
+using System.Linq;
 
 public class TreeRectDebug : MonoBehaviour
 {
@@ -21,9 +22,8 @@ public class TreeRectDebug : MonoBehaviour
         MakeRooms(leaves, rooms);
         List<BinaryTreeNode<RectInt>> nodes = new List<BinaryTreeNode<RectInt>>();
         collectNodes(rooms, nodes);
-        List<BinaryTreeNode<RectInt>> corridors = new List<BinaryTreeNode<RectInt>>();
+        //List<BinaryTreeNode<RectInt>> corridors = new List<BinaryTreeNode<RectInt>>();
         List<RectInt> cor = new List<RectInt>();
-        // makeConnections(nodes, corridors);
         makeConnections(nodes, cor);
         int[,] output = new int[levelWidth, levelHeight];
         //int change = 1;
@@ -40,7 +40,7 @@ public class TreeRectDebug : MonoBehaviour
         //        }
         //    }
         //    //change++;
-        
+
         //}
         foreach (BinaryTreeNode<RectInt> node in rooms)
         {
@@ -55,20 +55,19 @@ public class TreeRectDebug : MonoBehaviour
                 }
             }
         }
-        //foreach (BinaryTreeNode<RectInt> corr in corridors)
-        //{
-        //    for (int x = 0; x < output.GetLength(0); x++)
-        //    {
-        //        for (int y = 0; y < output.GetLength(1); y++)
-        //        {
-        //            RectInt rct = NodeRectWorld(corr);
-        //            if (rct.Contains(new Vector2Int(x, y)))
-        //            {
-        //                output[x, y] = 2;
-        //            }
-        //        }
-        //    }
-        //}
+        foreach (RectInt corr in cor)
+        {
+            for (int x = 0; x < output.GetLength(0); x++)
+            {
+                for (int y = 0; y < output.GetLength(1); y++)
+                {
+                    if (corr.Contains(new Vector2Int(x, y)))
+                    {
+                        output[x, y] = 2;
+                    }
+                }
+            }
+        }
         TestPrint(output);
     }
 
@@ -123,8 +122,7 @@ public class TreeRectDebug : MonoBehaviour
             {
                 rectSplit(node, startingsplit);
             }
-            if (startingsplit) startingsplit = false;
-            else startingsplit = true;
+            startingsplit = !startingsplit;
             leaves.Clear();
         }
     }
@@ -146,7 +144,7 @@ public class TreeRectDebug : MonoBehaviour
             leaves.Add(currentNode);
         }
     }
-    
+
     private void collectNodes(List<BinaryTreeNode<RectInt>> rooms, List<BinaryTreeNode<RectInt>> leaves)
     {
         foreach (BinaryTreeNode<RectInt> room in rooms)
@@ -198,24 +196,52 @@ public class TreeRectDebug : MonoBehaviour
 
     void makeConnections(List<BinaryTreeNode<RectInt>> nodes, List<RectInt> corridors)
     {
+        // rewrite to just get the root, then walk down from there, using every node with a pairing?
         int iter = 0;
         while (iter < cycles)
         {
+            print("Iteration " + iter.ToString());
             foreach (BinaryTreeNode<RectInt> node in nodes)
             {
-                if (node.leftChild.Value().y == node.rightChild.Value().y)
-                {
+                RectInt lc = NodeRectWorld(node.leftChild);
+                RectInt rc = NodeRectWorld(node.rightChild);
+                print("Connecting... " + lc.ToString() + " to " + rc.ToString());
 
+                if (lc.y == rc.y)
+                {
+                    //corridors.Add(new RectInt(lc.xMax - (lc.width / 2), lc.yMax - 1, 1, 2));
+                    RectInt C = new RectInt(0, 0, 0, 0);
+                    if (lc.width <= 6)
+                    {
+                        C = new RectInt(lc.x + (lc.width - 1), lc.y + (lc.height / 2), 2, 1);
+                    }
+                    else
+                    {
+                        C = new RectInt(lc.x + (lc.width - 1), lc.y + (lc.height / 2) + 1, 2, 1);
+                    }
+                    corridors.Add(C);
+                    print("Connected. New corridor:" + C.ToString());
                 }
-                else if (node.leftChild.Value().x == node.rightChild.Value().x)
+                else if (lc.x == rc.x)
                 {
-
+                    RectInt C = new RectInt(0, 0, 0, 0);
+                    //if (lc.xMax <= 4)
+                    //{
+                        C = new RectInt(lc.x + (lc.width / 2) + 1, lc.y + (lc.height - 1), 1, 2);
+                    //}
+                    //else
+                    //{
+                        //C = new RectInt(lc.x + (lc.width / 2) + 1, lc.y + (lc.height), 1, 2);
+                    //}
+                    corridors.Add(C);
+                    print("Connected. New corridor:" + C.ToString());
                 }
             }
             List<BinaryTreeNode<RectInt>> x2 = nodes;
-            nodes.Clear();
+            nodes = new List<BinaryTreeNode<RectInt>>();
             getNextLevelUp(x2, nodes);
             iter++;
+
         }
     }
 
@@ -223,7 +249,7 @@ public class TreeRectDebug : MonoBehaviour
     {
         List<int> possible = new List<int>();
 
-        if(axis == true)
+        if (axis == true)
         {
             // vert
             for (int x = 0; x < node.Value().width; x++)
@@ -231,7 +257,7 @@ public class TreeRectDebug : MonoBehaviour
 
             }
         }
-        if(axis == false)
+        if (axis == false)
         {
             // horiz
             for (int y = 0; y < node.Value().height; y++)
